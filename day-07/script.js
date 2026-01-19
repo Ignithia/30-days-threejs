@@ -35,7 +35,7 @@ const wallMaterial = new THREE.MeshStandardMaterial({
   // Floor
   const floorGeo = new THREE.PlaneGeometry(roomSize, roomSize);
   const floor = new THREE.Mesh(floorGeo, wallMaterial);
-  floor.rotation.x = -Math.PI / 2; // Rotate to be horizontal
+  floor.rotation.x = -Math.PI / 2;
   floor.position.y = 0;
   floor.receiveShadow = true;
   scene.add(floor);
@@ -45,7 +45,7 @@ const wallMaterial = new THREE.MeshStandardMaterial({
   // Ceiling
   const ceilingGeo = new THREE.PlaneGeometry(roomSize, roomSize);
   const ceiling = new THREE.Mesh(ceilingGeo, wallMaterial);
-  ceiling.rotation.x = Math.PI / 2; // Rotate opposite to floor
+  ceiling.rotation.x = Math.PI / 2;
   ceiling.position.y = roomSize;
   ceiling.receiveShadow = true;
   scene.add(ceiling);
@@ -78,7 +78,7 @@ const wallMaterial = new THREE.MeshStandardMaterial({
   const leftWall = new THREE.Mesh(wallGeo, wallMaterial);
   leftWall.position.x = -roomSize / 2;
   leftWall.position.y = roomSize / 2;
-  leftWall.rotation.y = Math.PI / 2; // Rotate 90° to face right
+  leftWall.rotation.y = Math.PI / 2;
   leftWall.receiveShadow = true;
   scene.add(leftWall);
 }
@@ -89,7 +89,7 @@ const wallMaterial = new THREE.MeshStandardMaterial({
   const rightWall = new THREE.Mesh(wallGeo, wallMaterial);
   rightWall.position.x = roomSize / 2;
   rightWall.position.y = roomSize / 2;
-  rightWall.rotation.y = -Math.PI / 2; // Rotate -90° to face left
+  rightWall.rotation.y = -Math.PI / 2;
   rightWall.receiveShadow = true;
   scene.add(rightWall);
 }
