@@ -36,7 +36,7 @@ canvas {
 
 .info .instructions {
   margin-top: 0.75rem;
-  background: rgba(255,255,255,0.04);
+  background: rgba(255, 255, 255, 0.04);
   padding: 0.6rem 0.8rem;
   border-radius: 6px;
   max-width: 320px;
