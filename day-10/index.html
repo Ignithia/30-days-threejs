@@ -1,24 +1,41 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Day 10 - Keyboard Controls | 30 Days of Three.js</title>
-  <link rel="stylesheet" href="../style.css">
-</head>
-<body>
-  <div class="info">
-    <h1>Day 10: Keyboard Controls</h1>
-    <p>Move an object with arrow keys/WASD.</p>
-  </div>
-  <a href="/projects/#30days" class="back-link">Back to Projects</a>
-  <script type="importmap">
-    { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
-  </script>
-  <script type="module" src="script.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Day 10 - Keyboard Controls | 30 Days of Three.js</title>
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <div class="info">
+      <h1>Day 10: Keyboard Controls</h1>
+      <p>Move an object with arrow keys/WASD.</p>
+      <div class="instructions">
+        <h2>Controls</h2>
+        <ul>
+          <li><strong>W / ↑</strong>: Move forward</li>
+          <li><strong>S / ↓</strong>: Move backward</li>
+          <li><strong>A / ←</strong>: Strafe left</li>
+          <li><strong>D / →</strong>: Strafe right</li>
+          <li>
+            <strong>Click the scene</strong> to lock the mouse and enable
+            look-around (Pointer Lock). Press <strong>Esc</strong> to release.
+          </li>
+        </ul>
+        <p class="note">
+          Tip: Use WASD + mouse to explore the street in first-person.
+        </p>
+      </div>
+    </div>
+    <a href="/projects/#30days" class="back-link">Back to Projects</a>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module" src="script.js"></script>
+  </body>
 </html>
-
-
-
-
