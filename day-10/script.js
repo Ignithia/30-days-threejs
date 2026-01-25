@@ -122,16 +122,16 @@ function animate(time) {
   }
 
   //Movement
-  if (keys["w"] || (keys["arrowup"] && camera.position.z > -50)) {
+  if ((keys["w"] || keys["arrowup"]) && camera.position.z > -50) {
     camera.position.z -= speed;
   }
-  if (keys["s"] || (keys["arrowdown"] && camera.position.z < 50)) {
+  if ((keys["s"] || keys["arrowdown"]) && camera.position.z < 50) {
     camera.position.z += speed;
   }
-  if (keys["a"] || (keys["arrowleft"] && camera.position.x > -6)) {
+  if ((keys["a"] || keys["arrowleft"]) && camera.position.x > -6) {
     camera.position.x -= speed;
   }
-  if (keys["d"] || (keys["arrowright"] && camera.position.x < 6)) {
+  if ((keys["d"] || keys["arrowright"]) && camera.position.x < 6) {
     camera.position.x += speed;
   }
   renderer.render(scene, camera);
