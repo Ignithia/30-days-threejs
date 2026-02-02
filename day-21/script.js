@@ -1,6 +1,6 @@
 ﻿import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 // Day 21: Mini Scene with Assets - A desk scene with textured models.
 
 const scene = new THREE.Scene();
@@ -18,7 +18,7 @@ const camera = new THREE.PerspectiveCamera(
   75,
   window.innerWidth / window.innerHeight,
   0.1,
-  100
+  100,
 );
 camera.position.set(2, 1.6, 3);
 
@@ -47,7 +47,7 @@ const floorMaterial = new THREE.MeshStandardMaterial({
 // floor
 const floor = new THREE.Mesh(
   new THREE.PlaneGeometry(roomWidth, roomDepth),
-  floorMaterial
+  floorMaterial,
 );
 floor.rotation.x = -Math.PI / 2;
 floor.receiveShadow = true;
@@ -56,7 +56,7 @@ scene.add(floor);
 // walls
 const leftWall = new THREE.Mesh(
   new THREE.PlaneGeometry(roomDepth, roomHeight),
-  wallMaterial
+  wallMaterial,
 );
 leftWall.position.set(-roomWidth / 2, roomHeight / 2, 0);
 leftWall.rotation.y = Math.PI / 2;
@@ -64,14 +64,14 @@ scene.add(leftWall);
 
 const backWall = new THREE.Mesh(
   new THREE.PlaneGeometry(roomWidth, roomHeight),
-  wallMaterial
+  wallMaterial,
 );
 backWall.position.set(0, roomHeight / 2, -roomDepth / 2);
 scene.add(backWall);
 
 const rightWall = new THREE.Mesh(
   new THREE.PlaneGeometry(roomDepth, roomHeight),
-  wallMaterial
+  wallMaterial,
 );
 rightWall.position.set(roomWidth / 2, roomHeight / 2, 0);
 rightWall.rotation.y = -Math.PI / 2;
@@ -80,7 +80,7 @@ scene.add(rightWall);
 // ceiling
 const ceiling = new THREE.Mesh(
   new THREE.PlaneGeometry(roomWidth, roomDepth),
-  wallMaterial
+  wallMaterial,
 );
 ceiling.position.y = roomHeight;
 ceiling.rotation.x = Math.PI / 2;
@@ -98,9 +98,9 @@ const topFrame = new THREE.Mesh(
   new THREE.BoxGeometry(
     windowWidth + frameThickness * 2,
     frameThickness,
-    frameThickness
+    frameThickness,
   ),
-  new THREE.MeshStandardMaterial({ color: frameColor })
+  new THREE.MeshStandardMaterial({ color: frameColor }),
 );
 topFrame.position.set(0, windowHeight / 2, 0);
 windowFrame.add(topFrame);
@@ -111,7 +111,7 @@ windowFrame.add(bottomFrame);
 
 const leftFrame = new THREE.Mesh(
   new THREE.BoxGeometry(frameThickness, windowHeight, frameThickness),
-  new THREE.MeshStandardMaterial({ color: frameColor })
+  new THREE.MeshStandardMaterial({ color: frameColor }),
 );
 leftFrame.position.set(-windowWidth / 2, 0, 0);
 windowFrame.add(leftFrame);
@@ -130,7 +130,7 @@ const glassMaterial = new THREE.MeshStandardMaterial({
 });
 const glass = new THREE.Mesh(
   new THREE.PlaneGeometry(windowWidth, windowHeight),
-  glassMaterial
+  glassMaterial,
 );
 glass.position.z = -0.01;
 windowFrame.add(glass);
@@ -148,7 +148,7 @@ const woodMaterial = new THREE.MeshStandardMaterial({
 // desk surface
 const deskTop = new THREE.Mesh(
   new THREE.BoxGeometry(1.5, 0.05, 0.7),
-  woodMaterial
+  woodMaterial,
 );
 deskTop.position.y = 0.75;
 deskTop.castShadow = true;
@@ -173,44 +173,122 @@ positions.forEach((pos) => {
 deskGroup.position.set(1.5, 0, -1);
 scene.add(deskGroup);
 
-// monitor with better design
-const monitorBase = new THREE.Mesh(
-  new THREE.BoxGeometry(0.5, 0.03, 0.3),
-  new THREE.MeshStandardMaterial({ color: 0x222222 })
-);
-monitorBase.position.y = 0.775;
-monitorBase.castShadow = true;
-deskGroup.add(monitorBase);
+// Load GLTF models
+const loader = new GLTFLoader();
 
-const monitorStand = new THREE.Mesh(
-  new THREE.CylinderGeometry(0.04, 0.04, 0.12),
-  new THREE.MeshStandardMaterial({ color: 0x222222 })
+// Load PC model
+loader.load(
+  "./models/Pc/scene.gltf",
+  (gltf) => {
+    const pcModel = gltf.scene;
+    pcModel.scale.set(0.3, 0.3, 0.3); // Scale down to fit desk
+    pcModel.position.set(0, 0.75, -0.15);
+    pcModel.traverse((child) => {
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+    deskGroup.add(pcModel);
+  },
+  undefined,
+  (error) => {
+    console.warn("PC model failed to load:", error);
+    // Fallback to original monitor code if model fails
+    createFallbackMonitor();
+  },
 );
-monitorStand.position.set(0, 0.84, -0.05);
-monitorStand.castShadow = true;
-deskGroup.add(monitorStand);
 
-// monitor screen with bezel
-const screenBezel = new THREE.Mesh(
-  new THREE.BoxGeometry(0.4, 0.25, 0.025),
-  new THREE.MeshStandardMaterial({ color: 0x111111 })
+// Load Desk Lamp model
+loader.load(
+  "./models/Desklamp/scene.gltf",
+  (gltf) => {
+    const lampModel = gltf.scene;
+    lampModel.scale.set(0.15, 0.15, 0.15); // Scale to appropriate size
+    lampModel.position.set(-0.4, 0.75, 0.2);
+    lampModel.traverse((child) => {
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+    deskGroup.add(lampModel);
+  },
+  undefined,
+  (error) => {
+    console.warn("Lamp model failed to load:", error);
+    // Fallback to original lamp code if model fails
+    createFallbackLamp();
+  },
 );
-screenBezel.position.set(0, 0.95, -0.05); // Aligned with stand
-screenBezel.castShadow = true;
-deskGroup.add(screenBezel);
 
-const screenMaterial = new THREE.MeshStandardMaterial({
-  color: 0x111111,
-  emissive: 0xffe135,
-  emissiveIntensity: 0.4,
-});
-const screen = new THREE.Mesh(
-  new THREE.BoxGeometry(0.35, 0.2, 0.01),
-  screenMaterial
-);
-screen.position.set(0, 0.95, -0.045); // Properly on stand
-screen.castShadow = true;
-deskGroup.add(screen);
+function createFallbackMonitor() {
+  // Original monitor code as fallback
+  const monitorBase = new THREE.Mesh(
+    new THREE.BoxGeometry(0.5, 0.03, 0.3),
+    new THREE.MeshStandardMaterial({ color: 0x222222 }),
+  );
+  monitorBase.position.y = 0.775;
+  monitorBase.castShadow = true;
+  deskGroup.add(monitorBase);
+
+  const monitorStand = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.04, 0.04, 0.12),
+    new THREE.MeshStandardMaterial({ color: 0x222222 }),
+  );
+  monitorStand.position.set(0, 0.84, -0.05);
+  monitorStand.castShadow = true;
+  deskGroup.add(monitorStand);
+
+  const screenBezel = new THREE.Mesh(
+    new THREE.BoxGeometry(0.4, 0.25, 0.025),
+    new THREE.MeshStandardMaterial({ color: 0x111111 }),
+  );
+  screenBezel.position.set(0, 0.95, -0.05);
+  screenBezel.castShadow = true;
+  deskGroup.add(screenBezel);
+
+  const screen = new THREE.Mesh(
+    new THREE.BoxGeometry(0.35, 0.2, 0.01),
+    screenMaterial,
+  );
+  screen.position.set(0, 0.95, -0.045);
+  screen.castShadow = true;
+  deskGroup.add(screen);
+}
+
+function createFallbackLamp() {
+  // Original lamp code as fallback
+  const lampGroup = new THREE.Group();
+  const lampBase = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.08, 0.08, 0.03),
+    new THREE.MeshStandardMaterial({ color: 0x444444 }),
+  );
+  lampBase.position.set(-0.4, 0.785, 0.2);
+  lampGroup.add(lampBase);
+
+  const lampArm = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.015, 0.015, 0.4),
+    new THREE.MeshStandardMaterial({ color: 0x444444 }),
+  );
+  lampArm.position.set(-0.4, 1, 0.2);
+  lampArm.rotation.z = 0.3;
+  lampGroup.add(lampArm);
+
+  lampHead = new THREE.Mesh(
+    new THREE.ConeGeometry(0.08, 0.12),
+    new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      emissive: 0xffaa00,
+      emissiveIntensity: 0.1,
+    }),
+  );
+  lampHead.position.set(-0.28, 1.15, 0.2);
+  lampHead.rotation.z = 0.5;
+  lampGroup.add(lampHead);
+
+  deskGroup.add(lampGroup);
+}
 
 // chair
 const chairGroup = new THREE.Group();
@@ -221,7 +299,7 @@ const chairMaterial = new THREE.MeshStandardMaterial({
 
 const chairSeat = new THREE.Mesh(
   new THREE.BoxGeometry(0.4, 0.05, 0.4),
-  chairMaterial
+  chairMaterial,
 );
 chairSeat.position.y = 0.5;
 chairSeat.castShadow = true;
@@ -229,7 +307,7 @@ chairGroup.add(chairSeat);
 
 const chairBack = new THREE.Mesh(
   new THREE.BoxGeometry(0.4, 0.6, 0.05),
-  chairMaterial
+  chairMaterial,
 );
 chairBack.position.set(0, 0.8, -0.175);
 chairBack.castShadow = true;
@@ -260,7 +338,7 @@ const bedSheetMaterial = new THREE.MeshStandardMaterial({ color: 0x2f4f4f });
 
 const bedFrame = new THREE.Mesh(
   new THREE.BoxGeometry(1.8, 0.2, 1),
-  bedMaterial
+  bedMaterial,
 );
 bedFrame.position.y = 0.1;
 bedFrame.castShadow = true;
@@ -268,7 +346,7 @@ bedGroup.add(bedFrame);
 
 const mattress = new THREE.Mesh(
   new THREE.BoxGeometry(1.7, 0.15, 0.9),
-  bedSheetMaterial
+  bedSheetMaterial,
 );
 mattress.position.y = 0.275;
 mattress.castShadow = true;
@@ -277,7 +355,7 @@ bedGroup.add(mattress);
 // First pillow at head of bed
 const pillow = new THREE.Mesh(
   new THREE.BoxGeometry(0.36, 0.1, 0.35),
-  new THREE.MeshStandardMaterial({ color: 0xf5f5dc, roughness: 0.8 })
+  new THREE.MeshStandardMaterial({ color: 0xf5f5dc, roughness: 0.8 }),
 );
 pillow.position.set(-0.6, 0.35, 0.17);
 pillow.castShadow = true;
@@ -286,7 +364,7 @@ bedGroup.add(pillow);
 // Second pillow
 const pillow2 = new THREE.Mesh(
   new THREE.BoxGeometry(0.36, 0.1, 0.35),
-  new THREE.MeshStandardMaterial({ color: 0xf5f5dc, roughness: 0.8 })
+  new THREE.MeshStandardMaterial({ color: 0xf5f5dc, roughness: 0.8 }),
 );
 pillow2.position.set(-0.6, 0.35, -0.17);
 pillow2.castShadow = true;
@@ -295,7 +373,7 @@ bedGroup.add(pillow2);
 // Blanket
 const blanket = new THREE.Mesh(
   new THREE.BoxGeometry(1.6, 0.015, 0.7),
-  new THREE.MeshStandardMaterial({ color: 0x4682b4, roughness: 0.8 })
+  new THREE.MeshStandardMaterial({ color: 0x4682b4, roughness: 0.8 }),
 );
 blanket.position.set(0, 0.35, 0);
 blanket.castShadow = true;
@@ -304,41 +382,20 @@ bedGroup.add(blanket);
 bedGroup.position.set(-1.5, 0, 0.5);
 scene.add(bedGroup);
 
-// desk lamp
-const lampGroup = new THREE.Group();
-const lampBase = new THREE.Mesh(
-  new THREE.CylinderGeometry(0.08, 0.08, 0.03),
-  new THREE.MeshStandardMaterial({ color: 0x444444 })
-);
-lampBase.position.set(-0.4, 0.785, 0.2); // Moved away from plant
-lampGroup.add(lampBase);
+// Define screen material for fallback monitor
+const screenMaterial = new THREE.MeshStandardMaterial({
+  color: 0x111111,
+  emissive: 0xffe135,
+  emissiveIntensity: 0.4,
+});
 
-const lampArm = new THREE.Mesh(
-  new THREE.CylinderGeometry(0.015, 0.015, 0.4),
-  new THREE.MeshStandardMaterial({ color: 0x444444 })
-);
-lampArm.position.set(-0.4, 1, 0.2);
-lampArm.rotation.z = 0.3;
-lampGroup.add(lampArm);
-
-const lampHead = new THREE.Mesh(
-  new THREE.ConeGeometry(0.08, 0.12),
-  new THREE.MeshStandardMaterial({
-    color: 0xffffff,
-    emissive: 0xffaa00,
-    emissiveIntensity: 0.1,
-  })
-);
-lampHead.position.set(-0.28, 1.15, 0.2); // Aligned with arm end
-lampHead.rotation.z = 0.5;
-lampGroup.add(lampHead);
-
-deskGroup.add(lampGroup);
+// Global reference for lamp head animation
+let lampHead = null;
 
 // keyboard
 const keyboard = new THREE.Mesh(
   new THREE.BoxGeometry(0.4, 0.02, 0.15),
-  new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.6 })
+  new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.6 }),
 );
 keyboard.position.set(0, 0.785, 0.15);
 keyboard.castShadow = true;
@@ -347,7 +404,7 @@ deskGroup.add(keyboard);
 // mouse
 const mouse = new THREE.Mesh(
   new THREE.BoxGeometry(0.05, 0.015, 0.08),
-  new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.5 })
+  new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.5 }),
 );
 mouse.position.set(0.25, 0.785, 0.15);
 mouse.castShadow = true;
@@ -356,7 +413,7 @@ deskGroup.add(mouse);
 // small book stack
 const book1 = new THREE.Mesh(
   new THREE.BoxGeometry(0.12, 0.015, 0.18),
-  new THREE.MeshStandardMaterial({ color: 0x8b4513 })
+  new THREE.MeshStandardMaterial({ color: 0x8b4513 }),
 );
 book1.position.set(-0.5, 0.785, -0.1);
 book1.castShadow = true;
@@ -364,7 +421,7 @@ deskGroup.add(book1);
 
 const book2 = new THREE.Mesh(
   new THREE.BoxGeometry(0.11, 0.015, 0.17),
-  new THREE.MeshStandardMaterial({ color: 0x2f4f4f })
+  new THREE.MeshStandardMaterial({ color: 0x2f4f4f }),
 );
 book2.position.set(-0.5, 0.8, -0.1);
 book2.castShadow = true;
@@ -373,7 +430,7 @@ deskGroup.add(book2);
 // enhanced plant
 const plantPot = new THREE.Mesh(
   new THREE.CylinderGeometry(0.05, 0.06, 0.07),
-  new THREE.MeshStandardMaterial({ color: 0x8b4513, roughness: 0.8 })
+  new THREE.MeshStandardMaterial({ color: 0x8b4513, roughness: 0.8 }),
 );
 plantPot.position.set(0.45, 0.815, 0.25);
 plantPot.castShadow = true;
@@ -381,7 +438,7 @@ deskGroup.add(plantPot);
 
 const plantStem = new THREE.Mesh(
   new THREE.CylinderGeometry(0.005, 0.005, 0.08),
-  new THREE.MeshStandardMaterial({ color: 0x228b22 })
+  new THREE.MeshStandardMaterial({ color: 0x228b22 }),
 );
 plantStem.position.set(0.45, 0.885, 0.25);
 plantStem.castShadow = true;
@@ -389,7 +446,7 @@ deskGroup.add(plantStem);
 
 const plantLeaves = new THREE.Mesh(
   new THREE.SphereGeometry(0.06, 8, 6),
-  new THREE.MeshStandardMaterial({ color: 0x32cd32, roughness: 0.7 })
+  new THREE.MeshStandardMaterial({ color: 0x32cd32, roughness: 0.7 }),
 );
 plantLeaves.position.set(0.45, 0.92, 0.25);
 plantLeaves.castShadow = true;
@@ -444,8 +501,10 @@ function animate(t) {
   screenLight.intensity = 0.6 + Math.sin(t * 8) * 0.05;
   screenMaterial.emissiveIntensity = 0.3 + Math.sin(t * 12) * 0.02;
 
-  // gentle lamp sway
-  lampHead.rotation.x = Math.sin(t * 0.8) * 0.02;
+  // gentle lamp sway (only if fallback lamp is loaded)
+  if (lampHead) {
+    lampHead.rotation.x = Math.sin(t * 0.8) * 0.02;
+  }
 
   renderer.render(scene, camera);
 }
