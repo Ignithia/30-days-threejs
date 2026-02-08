@@ -1,24 +1,33 @@
-﻿<!DOCTYPE html>
+﻿<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Day 27 - Physics Engine | 30 Days of Three.js</title>
-  <link rel="stylesheet" href="../style.css">
-</head>
-<body>
-  <div class="info">
-    <h1>Day 27: Physics Engine</h1>
-    <p>Integrate Cannon.js or Ammo.js for real physics.</p>
-  </div>
-  <a href="/projects/#30days" class="back-link">Back to Projects</a>
-  <script type="importmap">
-    { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
-  </script>
-  <script type="module" src="script.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Day 27 - Physics Engine | 30 Days of Three.js</title>
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <div class="info">
+      <h1>Day 27: Physics Engine</h1>
+      <p>Integrate Cannon.js or Ammo.js for real physics.</p>
+      <div class="instructions">
+        <p>
+          Click to launch bowling ball<br />
+          Space to reset pyramid<br />
+          Drag to rotate view
+        </p>
+      </div>
+    </div>
+    <a href="/projects/#30days" class="back-link">Back to Projects</a>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+          "cannon-es": "https://unpkg.com/cannon-es@0.20.0/dist/cannon-es.js"
+        }
+      }
+    </script>
+    <script type="module" src="script.js"></script>
+  </body>
 </html>
-
-
-
-
