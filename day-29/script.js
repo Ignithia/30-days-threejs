@@ -26,6 +26,8 @@ class RetroShaderMonitor {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.0;
     document.body.appendChild(this.renderer.domElement);
   }
 
@@ -50,19 +52,197 @@ class RetroShaderMonitor {
   initPostProcessing() {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color("skyblue");
+
+    const envTexture = new THREE.CubeTextureLoader().load([
+      "data:image/svg+xml;base64," +
+        btoa(
+          '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512"><rect fill="#87CEEB" width="512" height="512"/></svg>',
+        ),
+      "data:image/svg+xml;base64," +
+        btoa(
+          '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512"><rect fill="#87CEEB" width="512" height="512"/></svg>',
+        ),
+      "data:image/svg+xml;base64," +
+        btoa(
+          '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512"><rect fill="#B0E0E6" width="512" height="512"/></svg>',
+        ),
+      "data:image/svg+xml;base64," +
+        btoa(
+          '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512"><rect fill="#6495ED" width="512" height="512"/></svg>',
+        ),
+      "data:image/svg+xml;base64," +
+        btoa(
+          '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512"><rect fill="#87CEEB" width="512" height="512"/></svg>',
+        ),
+      "data:image/svg+xml;base64," +
+        btoa(
+          '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512"><rect fill="#87CEEB" width="512" height="512"/></svg>',
+        ),
+    ]);
+    this.envMap = envTexture;
+  }
+
+  createCRTGeometry() {
+    const geometry = new THREE.BufferGeometry();
+    const vertices = [];
+    const indices = [];
+
+    const width = 3.8;
+    const height = 3.0;
+    const depth = 1.8;
+    const curve = 0.25;
+    const taper = 0.88;
+    const bezelWidth = 0.45;
+    const segments = 72;
+
+    for (let layer = 0; layer <= 1; layer++) {
+      const z = layer === 0 ? depth / 2 : -depth / 2;
+      const scale = layer === 0 ? 1.0 : taper;
+
+      for (let ring = 0; ring <= 1; ring++) {
+        const outerW = (width / 2) * scale;
+        const outerH = (height / 2) * scale;
+        const innerW = outerW - bezelWidth * scale;
+        const innerH = outerH - bezelWidth * scale;
+
+        const w = ring === 0 ? outerW : innerW;
+        const h = ring === 0 ? outerH : innerH;
+
+        for (let seg = 0; seg <= segments; seg++) {
+          let x, y;
+          const t = (seg / segments) * 4; // traverse parameter
+
+          if (t < 1) {
+            x = (t - 0.5) * 2 * w;
+            y = -h;
+          } else if (t < 2) {
+            x = w;
+            y = (t - 1 - 0.5) * 2 * h;
+          } else if (t < 3) {
+            x = (3 - t - 0.5) * 2 * w;
+            y = h;
+          } else {
+            x = -w;
+            y = (4 - t - 0.5) * 2 * h;
+          }
+
+          let zOffset = 0;
+          if (layer === 0) {
+            const distSq = (x / outerW) ** 2 + (y / outerH) ** 2; //Distance squared
+            zOffset = curve * Math.exp(-distSq * 1.5);
+          }
+
+          vertices.push(x, y, z + zOffset);
+        }
+      }
+    }
+
+    const vertsPerRing = segments + 1;
+    const ringsPerLayer = 2;
+
+    for (let seg = 0; seg < segments; seg++) {
+      const a = seg;
+      const b = seg + 1;
+      const c = vertsPerRing + seg;
+      const d = vertsPerRing + seg + 1;
+      indices.push(a, b, d, a, d, c);
+    }
+
+    const backStart = ringsPerLayer * vertsPerRing;
+    for (let seg = 0; seg < segments; seg++) {
+      const a = backStart + seg;
+      const b = backStart + seg + 1;
+      const c = backStart + vertsPerRing + seg;
+      const d = backStart + vertsPerRing + seg + 1;
+      indices.push(a, d, b, a, c, d); // a,b,c,d are the vertex indeices to form a quad
+    }
+
+    for (let ring = 0; ring < ringsPerLayer; ring++) {
+      for (let seg = 0; seg < segments; seg++) {
+        const frontBase = ring * vertsPerRing;
+        const backBase = backStart + ring * vertsPerRing;
+
+        const a = frontBase + seg;
+        const b = frontBase + seg + 1;
+        const c = backBase + seg;
+        const d = backBase + seg + 1;
+
+        indices.push(a, b, d, a, d, c);
+      }
+    }
+
+    const backOuterRing = backStart;
+    for (let seg = 0; seg < segments; seg++) {
+      const a = backOuterRing + seg;
+      const b = backOuterRing + seg + 1;
+      const c = backOuterRing + vertsPerRing + seg;
+      const d = backOuterRing + vertsPerRing + seg + 1;
+
+      indices.push(a, c, d, a, d, b);
+    }
+
+    const centerIdx = vertices.length / 3;
+    vertices.push(0, 0, -depth / 2);
+
+    const backInnerRing = backStart + vertsPerRing;
+    for (let seg = 0; seg < segments; seg++) {
+      const a = backInnerRing + seg;
+      const b = backInnerRing + seg + 1;
+      indices.push(centerIdx, a, b);
+    }
+
+    geometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(vertices, 3),
+    );
+    geometry.setIndex(indices);
+    geometry.computeVertexNormals();
+
+    return geometry;
+  }
+
+  createRoughnessTexture() {
+    const size = 256;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+
+    const imageData = ctx.createImageData(size, size);
+    const data = imageData.data;
+
+    for (let i = 0; i < size; i++) {
+      for (let j = 0; j < size; j++) {
+        const idx = (i * size + j) * 4;
+        const noise = Math.random() * 30 + 160;
+        data[idx] = noise;
+        data[idx + 1] = noise;
+        data[idx + 2] = noise;
+        data[idx + 3] = 255;
+      }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    return texture;
   }
 
   createCRTMonitor() {
-    const monitorGeometry = new THREE.BoxGeometry(3.8, 3.0, 1.8, 4, 4, 4);
-    const monitorMaterial = new THREE.MeshPhongMaterial({
-      color: 0x3a3a3a,
-      shininess: 15,
-      specular: 0x1a1a1a,
+    const monitorGeometry = this.createCRTGeometry();
+    const monitorMaterial = new THREE.MeshStandardMaterial({
+      color: 0x808080,
+      roughness: 0.5,
+      metalness: 0.05,
+      side: THREE.DoubleSide,
+      roughnessMap: this.createRoughnessTexture(),
     });
     this.monitor = new THREE.Mesh(monitorGeometry, monitorMaterial);
     this.scene.add(this.monitor);
 
-    const screenGeometry = new THREE.PlaneGeometry(2.8, 2.1);
+    const screenGeometry = new THREE.PlaneGeometry(2.95, 2.15);
     this.screenMaterial = new THREE.ShaderMaterial({
       uniforms: {
         uTime: { value: 0 },
@@ -83,15 +263,35 @@ class RetroShaderMonitor {
     });
 
     this.screen = new THREE.Mesh(screenGeometry, this.screenMaterial);
-    this.screen.position.set(0, 0, 0.91);
+    this.screen.position.set(0, 0, 0.95);
     this.scene.add(this.screen);
 
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+    const glassGeometry = new THREE.PlaneGeometry(2.95, 2.15);
+    const glassMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xffffff,
+      metalness: 0,
+      roughness: 0.05,
+      transmission: 0.98,
+      thickness: 0.1,
+      envMap: this.envMap,
+      envMapIntensity: 0.25,
+      transparent: true,
+      opacity: 0.15,
+    });
+    this.glass = new THREE.Mesh(glassGeometry, glassMaterial);
+    this.glass.position.set(0, 0, 0.96);
+    this.scene.add(this.glass);
+
+    const ambientLight = new THREE.AmbientLight(0x404040, 1.0);
     this.scene.add(ambientLight);
 
-    const pointLight = new THREE.PointLight(0xffffff, 0.8);
-    pointLight.position.set(0, 0, 5);
+    const pointLight = new THREE.PointLight(0xffffff, 1.2);
+    pointLight.position.set(3, 3, 5);
     this.scene.add(pointLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    directionalLight.position.set(-2, 2, 3);
+    this.scene.add(directionalLight);
   }
 
   getChannelShader() {
@@ -182,11 +382,10 @@ class RetroShaderMonitor {
       void main() {
         vec2 uv = vUv;
         
-        uv = uv * 2.0 - 1.0;
-        uv *= 1.02;
-        uv.x *= 1.0 + pow((abs(uv.y) / 5.0), 2.0);
-        uv.y *= 1.0 + pow((abs(uv.x) / 5.0), 2.0);
-        uv = (uv / 2.0) + 0.5;
+        vec2 centeredUV = uv * 2.0 - 1.0;
+        float dist = length(centeredUV);
+        centeredUV *= 1.0 + 0.08 * dist * dist;
+        uv = (centeredUV / 2.0) + 0.5;
         
         vec3 color = vec3(0.0);
         
@@ -200,22 +399,46 @@ class RetroShaderMonitor {
           color = tvStatic(uv);
         }
         
-        color += vhsStatic(uv) * 0.1;
+        vec2 offset = vec2(0.002, 0.0);
+        float r = (color.r + (uChannel < 1.0 ? plasma(uv - offset).r : color.r) * 0.5) * 0.7;
+        float g = color.g;
+        float b = (color.b + (uChannel < 1.0 ? plasma(uv + offset).b : color.b) * 0.5) * 0.7;
+        color = vec3(r, g, b);
         
-        float scanlines = sin(uv.y * 800.0) * 0.04;
-        color -= scanlines;
+        float mask = 1.0;
+        float py = mod(gl_FragCoord.y, 3.0);
+        if (py < 1.0) mask = 0.85;
+        else if (py < 2.0) mask = 0.9;
+        else mask = 0.95;
+        color *= mask;
         
-        float vignette = smoothstep(0.8, 0.2, length(uv - 0.5));
+        float scanline = sin(uv.y * 600.0 + uTime * 0.5) * 0.5 + 0.5;
+        scanline = scanline * 0.15 + 0.85;
+        color *= scanline;
+        
+        color += vhsStatic(uv) * 0.08;
+        
+        float brightness = dot(color, vec3(0.299, 0.587, 0.114));
+        vec3 bloom = color * smoothstep(0.6, 1.0, brightness) * 0.4;
+        color += bloom;
+        
+        float vignette = 1.0 - smoothstep(0.7, 1.4, length(centeredUV));
+        vignette = pow(vignette, 0.5);
         color *= vignette;
         
-        vec2 offset = vec2(0.002, 0.0);
-        
-        color *= 1.2;
+        color *= 1.1;
         color = pow(color, vec3(1.0/2.2));
         
+        float edgeFade = 1.0;
         if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
-          color = vec3(0.0);
+          edgeFade = 0.0;
+        } else {
+          float edgeDistX = min(uv.x, 1.0 - uv.x);
+          float edgeDistY = min(uv.y, 1.0 - uv.y);
+          float edgeDist = min(edgeDistX, edgeDistY);
+          edgeFade = smoothstep(0.0, 0.05, edgeDist);
         }
+        color *= edgeFade;
         
         gl_FragColor = vec4(color, 1.0);
       }
