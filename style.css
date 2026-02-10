@@ -114,3 +114,9 @@ body {
 .back-link:hover {
   background: rgba(255, 255, 255, 0.1);
 }
+
+.dark {
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 15px;
+  border-radius: 8px;
+}

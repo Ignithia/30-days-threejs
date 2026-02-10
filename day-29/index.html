@@ -1,24 +1,49 @@
-﻿<!DOCTYPE html>
+﻿<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Day 29 - Full Small Project | 30 Days of Three.js</title>
-  <link rel="stylesheet" href="../style.css">
-</head>
-<body>
-  <div class="info">
-    <h1>Day 29: Full Small Project</h1>
-    <p>Build a small interactive scene (e.g., solar system).</p>
-  </div>
-  <a href="/projects/#30days" class="back-link">Back to Projects</a>
-  <script type="importmap">
-    { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
-  </script>
-  <script type="module" src="script.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Day 29 - Full Small Project | 30 Days of Three.js</title>
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <div class="info dark">
+      <h1>Day 29: Full Small Project</h1>
+      <p>Build a small interactive scene (e.g., solar system).</p>
+
+      <div class="instructions">
+        <h3>TV Controls</h3>
+        <p>
+          <strong>Click</strong> or <strong>Space</strong> to change channels
+        </p>
+        <p><strong>Arrow Keys</strong> to navigate channels</p>
+        <p><strong>Drag</strong> to look around the monitor</p>
+        <p><strong>Scroll</strong> to zoom in/out</p>
+        <br />
+        <strong>Available Channels:</strong>
+        <ul>
+          <li>Channel 1: Retro Plasma</li>
+          <li>Channel 2: Digital Rain</li>
+          <li>Channel 3: Synthwave Grid</li>
+          <li>Channel 4: TV Static</li>
+        </ul>
+      </div>
+
+      <div id="channelIndicator" class="world-indicator">
+        Channel 1: Retro Plasma
+      </div>
+    </div>
+
+    <a href="/projects/#30days" class="back-link">Back to Projects</a>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module" src="script.js"></script>
+  </body>
 </html>
-
-
-
-
