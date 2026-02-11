@@ -150,8 +150,6 @@ class Portfolio3D {
     this.controls.maxDistance = 25;
     this.controls.minDistance = 3;
     this.controls.maxPolarAngle = Math.PI * 0.7;
-    this.controls.autoRotate = false;
-    this.controls.autoRotateSpeed = 0.5;
     this.controls.target.set(0, 0, 0);
   }
 
@@ -574,16 +572,19 @@ class Portfolio3D {
       window.location.href = "../../index.html";
     });
 
-    // View toggle button (toggle auto-rotate)
+    // View toggle button (toggle controls instructions)
     document.getElementById("view-toggle").addEventListener("click", () => {
-      this.controls.autoRotate = !this.controls.autoRotate;
+      const controlsInfo = document.getElementById("controls-info");
       const icon = document.querySelector("#view-toggle i");
-      if (this.controls.autoRotate) {
-        icon.classList.remove("fa-eye");
-        icon.classList.add("fa-eye-slash");
-      } else {
+      
+      if (controlsInfo.style.display === "none") {
+        controlsInfo.style.display = "flex";
         icon.classList.remove("fa-eye-slash");
         icon.classList.add("fa-eye");
+      } else {
+        controlsInfo.style.display = "none";
+        icon.classList.remove("fa-eye");
+        icon.classList.add("fa-eye-slash");
       }
     });
 
